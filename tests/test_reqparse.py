@@ -196,29 +196,33 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(True, arg.case_sensitive)
 
     def test_viewargs(self):
-        req = Request.from_values()
-        req.view_args = {"foo": "bar"}
-        parser = RequestParser()
-        parser.add_argument("foo", location=["view_args"])
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values()
+            req.view_args = {"foo": "bar"}
+            parser = RequestParser()
+            parser.add_argument("foo", location=["view_args"])
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
-        req = Mock()
-        req.values = ()
-        req.json = None
-        req.view_args = {"foo": "bar"}
-        parser = RequestParser()
-        parser.add_argument("foo", store_missing=True)
-        args = parser.parse_args(req)
-        self.assertEquals(args["foo"], None)
+            req = Mock()
+            req.values = ()
+            req.json = None
+            req.view_args = {"foo": "bar"}
+            parser = RequestParser()
+            parser.add_argument("foo", store_missing=True)
+            args = parser.parse_args(req)
+            self.assertEquals(args["foo"], None)
 
     def test_parse_unicode(self):
-        req = Request.from_values("/bubble?foo=barß")
-        parser = RequestParser()
-        parser.add_argument("foo")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=barß")
+            parser = RequestParser()
+            parser.add_argument("foo")
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], u"barß")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], u"barß")
 
     def test_parse_unicode_app(self):
         app = Flask(__name__)
@@ -253,68 +257,82 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'], 'bar')
 
     def test_parse_append_ignore(self):
-        req = Request.from_values("/bubble?foo=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", ignore=True, type=int, action="append",
-                            store_missing=True),
+            parser = RequestParser()
+            parser.add_argument("foo", ignore=True, type=int, action="append",
+                                store_missing=True),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], None)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], None)
 
     def test_parse_append_default(self):
-        req = Request.from_values("/bubble?")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?")
 
-        parser = RequestParser()
-        parser.add_argument("foo", action="append", store_missing=True),
+            parser = RequestParser()
+            parser.add_argument("foo", action="append", store_missing=True),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], None)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], None)
 
     def test_parse_append(self):
-        req = Request.from_values("/bubble?foo=bar&foo=bat")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar&foo=bat")
 
-        parser = RequestParser()
-        parser.add_argument("foo", action="append"),
+            parser = RequestParser()
+            parser.add_argument("foo", action="append"),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], ["bar", "bat"])
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], ["bar", "bat"])
 
     def test_parse_append_single(self):
-        req = Request.from_values("/bubble?foo=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", action="append"),
+            parser = RequestParser()
+            parser.add_argument("foo", action="append"),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], ["bar"])
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], ["bar"])
 
     def test_parse_dest(self):
-        req = Request.from_values("/bubble?foo=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", dest="bat")
+            parser = RequestParser()
+            parser.add_argument("foo", dest="bat")
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['bat'], "bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['bat'], "bar")
 
     def test_parse_gte_lte_eq(self):
-        req = Request.from_values("/bubble?foo>=bar&foo<=bat&foo=foo")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo>=bar&foo<=bat&foo=foo")
 
-        parser = RequestParser()
-        parser.add_argument("foo", operators=[">=", "<=", "="], action="append"),
+            parser = RequestParser()
+            parser.add_argument("foo", operators=[">=", "<=", "="], action="append"),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], ["bar", "bat", "foo"])
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], ["bar", "bat", "foo"])
 
     def test_parse_gte(self):
-        req = Request.from_values("/bubble?foo>=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo>=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", operators=[">="])
+            parser = RequestParser()
+            parser.add_argument("foo", operators=[">="])
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_foo_operators_four_hunderd(self):
         app = Flask(__name__)
@@ -325,55 +343,69 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(Request.from_values("/bubble?foo=bar")))
 
     def test_parse_foo_operators_ignore(self):
-        parser = RequestParser()
-        parser.add_argument("foo", ignore=True, store_missing=True)
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument("foo", ignore=True, store_missing=True)
 
-        args = parser.parse_args(Request.from_values("/bubble"))
-        self.assertEquals(args['foo'], None)
+            args = parser.parse_args(Request.from_values("/bubble"))
+            self.assertEquals(args['foo'], None)
 
     def test_parse_lte_gte_mock(self):
-        mock_type = Mock()
-        req = Request.from_values("/bubble?foo<=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            mock_type = Mock()
+            req = Request.from_values("/bubble?foo<=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", type=mock_type, operators=["<="])
+            parser = RequestParser()
+            parser.add_argument("foo", type=mock_type, operators=["<="])
 
-        parser.parse_args(req)
-        mock_type.assert_called_with("bar", "foo", "<=")
+            parser.parse_args(req)
+            mock_type.assert_called_with("bar", "foo", "<=")
 
     def test_parse_lte_gte_append(self):
-        parser = RequestParser()
-        parser.add_argument("foo", operators=["<=", "="], action="append")
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument("foo", operators=["<=", "="], action="append")
 
-        args = parser.parse_args(Request.from_values("/bubble?foo<=bar"))
-        self.assertEquals(args['foo'], ["bar"])
+            args = parser.parse_args(Request.from_values("/bubble?foo<=bar"))
+            self.assertEquals(args['foo'], ["bar"])
 
     def test_parse_lte_gte_missing(self):
-        parser = RequestParser()
-        parser.add_argument("foo", operators=["<=", "="])
-        args = parser.parse_args(Request.from_values("/bubble?foo<=bar"))
-        self.assertEquals(args['foo'], "bar")
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument("foo", operators=["<=", "="])
+            args = parser.parse_args(Request.from_values("/bubble?foo<=bar"))
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_eq_other(self):
-        parser = RequestParser()
-        parser.add_argument("foo"),
-        args = parser.parse_args(Request.from_values("/bubble?foo=bar&foo=bat"))
-        self.assertEquals(args['foo'], "bar")
+        app = Flask(__name__)
+        with app.app_context():
+            parser = RequestParser()
+            parser.add_argument("foo"),
+            args = parser.parse_args(Request.from_values("/bubble?foo=bar&foo=bat"))
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_eq(self):
-        req = Request.from_values("/bubble?foo=bar")
-        parser = RequestParser()
-        parser.add_argument("foo"),
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
+            parser = RequestParser()
+            parser.add_argument("foo"),
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_lte(self):
-        req = Request.from_values("/bubble?foo<=bar")
-        parser = RequestParser()
-        parser.add_argument("foo", operators=["<="])
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo<=bar")
+            parser = RequestParser()
+            parser.add_argument("foo", operators=["<="])
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_required(self):
         app = Flask(__name__)
@@ -450,68 +482,82 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(message, error_message)
 
     def test_parse_default_append(self):
-        req = Request.from_values("/bubble")
-        parser = RequestParser()
-        parser.add_argument("foo", default="bar", action="append",
-                            store_missing=True)
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble")
+            parser = RequestParser()
+            parser.add_argument("foo", default="bar", action="append",
+                                store_missing=True)
 
-        args = parser.parse_args(req)
+            args = parser.parse_args(req)
 
-        self.assertEquals(args['foo'], "bar")
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_default(self):
-        req = Request.from_values("/bubble")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble")
 
-        parser = RequestParser()
-        parser.add_argument("foo", default="bar", store_missing=True)
+            parser = RequestParser()
+            parser.add_argument("foo", default="bar", store_missing=True)
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_callable_default(self):
-        req = Request.from_values("/bubble")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble")
 
-        parser = RequestParser()
-        parser.add_argument("foo", default=lambda: "bar", store_missing=True)
+            parser = RequestParser()
+            parser.add_argument("foo", default=lambda: "bar", store_missing=True)
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse(self):
-        req = Request.from_values("/bubble?foo=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo"),
+            parser = RequestParser()
+            parser.add_argument("foo"),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bar")
 
     def test_parse_none(self):
-        req = Request.from_values("/bubble")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble")
 
-        parser = RequestParser()
-        parser.add_argument("foo")
+            parser = RequestParser()
+            parser.add_argument("foo")
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], None)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], None)
 
     def test_parse_store_missing(self):
-        req = Request.from_values("/bubble")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble")
 
-        parser = RequestParser()
-        parser.add_argument("foo", store_missing=False)
+            parser = RequestParser()
+            parser.add_argument("foo", store_missing=False)
 
-        args = parser.parse_args(req)
-        self.assertFalse('foo' in args)
+            args = parser.parse_args(req)
+            self.assertFalse('foo' in args)
 
     def test_parse_choices_correct(self):
-        req = Request.from_values("/bubble?foo=bat")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bat")
 
-        parser = RequestParser()
-        parser.add_argument("foo", choices=["bat"]),
+            parser = RequestParser()
+            parser.add_argument("foo", choices=["bat"]),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "bat")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "bat")
 
     def test_parse_choices(self):
         app = Flask(__name__)
@@ -534,31 +580,35 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertRaises(exceptions.BadRequest, lambda: parser.parse_args(req))
 
     def test_parse_choices_insensitive(self):
-        req = Request.from_values("/bubble?foo=BAT")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=BAT")
 
-        parser = RequestParser()
-        parser.add_argument("foo", choices=["bat"], case_sensitive=False),
+            parser = RequestParser()
+            parser.add_argument("foo", choices=["bat"], case_sensitive=False),
 
-        args = parser.parse_args(req)
-        self.assertEquals('bat', args.get('foo'))
+            args = parser.parse_args(req)
+            self.assertEquals('bat', args.get('foo'))
 
-        # both choices and args are case_insensitive
-        req = Request.from_values("/bubble?foo=bat")
+            # both choices and args are case_insensitive
+            req = Request.from_values("/bubble?foo=bat")
 
-        parser = RequestParser()
-        parser.add_argument("foo", choices=["BAT"], case_sensitive=False),
+            parser = RequestParser()
+            parser.add_argument("foo", choices=["BAT"], case_sensitive=False),
 
-        args = parser.parse_args(req)
-        self.assertEquals('bat', args.get('foo'))
+            args = parser.parse_args(req)
+            self.assertEquals('bat', args.get('foo'))
 
     def test_parse_ignore(self):
-        req = Request.from_values("/bubble?foo=bar")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
 
-        parser = RequestParser()
-        parser.add_argument("foo", type=int, ignore=True, store_missing=True),
+            parser = RequestParser()
+            parser.add_argument("foo", type=int, ignore=True, store_missing=True),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], None)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], None)
 
     def test_chaining(self):
         parser = RequestParser()
@@ -577,9 +627,11 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertRaises(KeyError, lambda: namespace['eggs'])
 
     def test_namespace_configurability(self):
-        req = Request.from_values()
-        self.assertTrue(isinstance(RequestParser().parse_args(req), Namespace))
-        self.assertTrue(type(RequestParser(namespace_class=dict).parse_args(req)) is dict)
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values()
+            self.assertTrue(isinstance(RequestParser().parse_args(req), Namespace))
+            self.assertTrue(type(RequestParser(namespace_class=dict).parse_args(req)) is dict)
 
     def test_none_argument(self):
 
@@ -594,13 +646,15 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'], None)
 
     def test_type_callable(self):
-        req = Request.from_values("/bubble?foo=1")
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=1")
 
-        parser = RequestParser()
-        parser.add_argument("foo", type=lambda x: x, required=False),
+            parser = RequestParser()
+            parser.add_argument("foo", type=lambda x: x, required=False),
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], "1")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], "1")
 
     def test_type_callable_none(self):
         app = Flask(__name__)
@@ -667,12 +721,14 @@ class ReqParseTestCase(unittest.TestCase):
 
 
     def test_passing_arguments_object(self):
-        req = Request.from_values("/bubble?foo=bar")
-        parser = RequestParser()
-        parser.add_argument(Argument("foo"))
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=bar")
+            parser = RequestParser()
+            parser.add_argument(Argument("foo"))
 
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], u"bar")
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], u"bar")
 
     def test_int_choice_types(self):
         app = Flask(__name__)
@@ -707,24 +763,26 @@ class ReqParseTestCase(unittest.TestCase):
                 pass
 
     def test_request_parser_copy(self):
-        req = Request.from_values("/bubble?foo=101&bar=baz")
-        parser = RequestParser()
-        foo_arg = Argument('foo', type=int)
-        parser.args.append(foo_arg)
-        parser_copy = parser.copy()
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=101&bar=baz")
+            parser = RequestParser()
+            foo_arg = Argument('foo', type=int)
+            parser.args.append(foo_arg)
+            parser_copy = parser.copy()
 
-        # Deepcopy should create a clone of the argument object instead of
-        # copying a reference to the new args list
-        self.assertFalse(foo_arg in parser_copy.args)
+            # Deepcopy should create a clone of the argument object instead of
+            # copying a reference to the new args list
+            self.assertFalse(foo_arg in parser_copy.args)
 
-        # Args added to new parser should not be added to the original
-        bar_arg = Argument('bar')
-        parser_copy.args.append(bar_arg)
-        self.assertFalse(bar_arg in parser.args)
+            # Args added to new parser should not be added to the original
+            bar_arg = Argument('bar')
+            parser_copy.args.append(bar_arg)
+            self.assertFalse(bar_arg in parser.args)
 
-        args = parser_copy.parse_args(req)
-        self.assertEquals(args['foo'], 101)
-        self.assertEquals(args['bar'], u'baz')
+            args = parser_copy.parse_args(req)
+            self.assertEquals(args['foo'], 101)
+            self.assertEquals(args['bar'], u'baz')
 
     def test_request_parse_copy_including_settings(self):
         parser = RequestParser(trim=True, bundle_errors=True)
@@ -734,14 +792,16 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEqual(parser.bundle_errors, parser_copy.bundle_errors)
 
     def test_request_parser_replace_argument(self):
-        req = Request.from_values("/bubble?foo=baz")
-        parser = RequestParser()
-        parser.add_argument('foo', type=int)
-        parser_copy = parser.copy()
-        parser_copy.replace_argument('foo')
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            parser.add_argument('foo', type=int)
+            parser_copy = parser.copy()
+            parser_copy.replace_argument('foo')
 
-        args = parser_copy.parse_args(req)
-        self.assertEquals(args['foo'], u'baz')
+            args = parser_copy.parse_args(req)
+            self.assertEquals(args['foo'], u'baz')
 
     def test_both_json_and_values_location(self):
 
@@ -768,14 +828,16 @@ class ReqParseTestCase(unittest.TestCase):
             parser.parse_args()  # Should not raise a 400: BadRequest
 
     def test_request_parser_remove_argument(self):
-        req = Request.from_values("/bubble?foo=baz")
-        parser = RequestParser()
-        parser.add_argument('foo', type=int)
-        parser_copy = parser.copy()
-        parser_copy.remove_argument('foo')
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            parser.add_argument('foo', type=int)
+            parser_copy = parser.copy()
+            parser_copy.remove_argument('foo')
 
-        args = parser_copy.parse_args(req)
-        self.assertEquals(args, {})
+            args = parser_copy.parse_args(req)
+            self.assertEquals(args, {})
 
     def test_strict_parsing_off(self):
         app = Flask(__name__)
@@ -855,21 +917,23 @@ class ReqParseTestCase(unittest.TestCase):
             self.assertEquals(args['foo'], 1)
 
     def test_trim_request_parser(self):
-        req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
-        parser = RequestParser(trim=False)
-        parser.add_argument('foo')
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], ' 1 ')
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
+            parser = RequestParser(trim=False)
+            parser.add_argument('foo')
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], ' 1 ')
 
-        parser = RequestParser(trim=True)
-        parser.add_argument('foo')
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], '1')
+            parser = RequestParser(trim=True)
+            parser.add_argument('foo')
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], '1')
 
-        parser = RequestParser(trim=True)
-        parser.add_argument('foo', type=int)
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], 1)
+            parser = RequestParser(trim=True)
+            parser.add_argument('foo', type=int)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], 1)
 
     def test_trim_request_parser_override_by_argument(self):
         parser = RequestParser(trim=True)
