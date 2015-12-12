@@ -778,45 +778,81 @@ class ReqParseTestCase(unittest.TestCase):
         self.assertEquals(args, {})
 
     def test_strict_parsing_off(self):
-        req = Request.from_values("/bubble?foo=baz")
-        parser = RequestParser()
-        args = parser.parse_args(req)
-        self.assertEquals(args, {})
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            args = parser.parse_args(req)
+            self.assertEquals(args, {})
 
     def test_strict_parsing_on(self):
-        req = Request.from_values("/bubble?foo=baz")
-        parser = RequestParser()
-        self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
 
     def test_strict_parsing_off_partial_hit(self):
-        req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
-        parser = RequestParser()
-        parser.add_argument('foo', type=int)
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], 1)
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
+            parser = RequestParser()
+            parser.add_argument('foo', type=int)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], 1)
 
     def test_strict_parsing_on_partial_hit(self):
-        req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
-        parser = RequestParser()
-        parser.add_argument('foo', type=int)
-        self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=1&bar=bees&n=22")
+            parser = RequestParser()
+            parser.add_argument('foo', type=int)
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req, strict=True)
+
+    def test_strict_parsing_configured_off(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = False
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            args = parser.parse_args(req)
+            self.assertEquals(args, {})
+
+    def test_strict_parsing_configured_on(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = True
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            self.assertRaises(exceptions.BadRequest, parser.parse_args, req)
+
+    def test_strict_parsing_configured_on_overridden(self):
+        app = Flask(__name__)
+        app.config['REQPARSE_STRICT'] = True
+        with app.app_context():
+            req = Request.from_values("/bubble?foo=baz")
+            parser = RequestParser()
+            args = parser.parse_args(req, strict=False)
+            self.assertEquals(args, {})
 
     def test_trim_argument(self):
-        req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
-        parser = RequestParser()
-        parser.add_argument('foo')
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], ' 1 ')
+        app = Flask(__name__)
+        with app.app_context():
+            req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
+            parser = RequestParser()
+            parser.add_argument('foo')
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], ' 1 ')
 
-        parser = RequestParser()
-        parser.add_argument('foo', trim=True)
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], '1')
+            parser = RequestParser()
+            parser.add_argument('foo', trim=True)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], '1')
 
-        parser = RequestParser()
-        parser.add_argument('foo', trim=True, type=int)
-        args = parser.parse_args(req)
-        self.assertEquals(args['foo'], 1)
+            parser = RequestParser()
+            parser.add_argument('foo', trim=True, type=int)
+            args = parser.parse_args(req)
+            self.assertEquals(args['foo'], 1)
 
     def test_trim_request_parser(self):
         req = Request.from_values("/bubble?foo= 1 &bar=bees&n=22")
